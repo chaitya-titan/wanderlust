@@ -1,24 +1,35 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import app from './app.js';
 import connectDB from './config/db.js';
-import { PORT } from './config/utils.js';
 import { connectToRedis } from './services/redis.js';
+import { PORT } from './config/utils.js';
 
-const server = () => {
-  const port = PORT || 8080;
+console.log('🚀 Starting server...');
 
-  // Redis connections
-  connectToRedis();
-  // mongodb connection
-  connectDB()
-    .then(() => {
-      app.listen(port, () => {
-        console.log(`Server is running on port ${port}`);
-      });
-    })
-    .catch((error) => {
-      console.log('MongoDB connection failed:', error);
+let server: any;
+
+async function startServer() {
+  try {
+    console.log('📡 Connecting to databases...');
+    await connectToRedis();
+    await connectDB();
+
+    const port = PORT || 3000;
+
+    server = app.listen(port, () => {
+      console.log(`✅ Server running on port ${port}`);
+      console.log(`🔗 Backend URL: http://localhost:${port}`);
     });
-};
-server();
+
+    return server;
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 export default server;
